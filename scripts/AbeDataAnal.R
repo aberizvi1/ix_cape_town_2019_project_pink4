@@ -1,90 +1,49 @@
-#Can we build a model to identify people who will get a job?
-
-library(tidyverse)
-library(pastecs)
-
-# turn off scientific notation
+# Aiden
+# Description: Cleaning the data
+# Created: 07-09-2019
+# Last Updated: 07-09-2019
 options(scipen=999)
+library(tidyverse)
 df <- read.csv("data/raw/teaching_training_data.csv")
-
-
-# some wrangling (discuss how to structure project workflow)
-# use readr::parse_number
-df <- df %>% 
-  mutate(fin_situ_now = parse_number(as.character(financial_situation_now))) %>% 
-  mutate(fin_situ_future = parse_number(as.character(financial_situation_5years))) %>% 
-  mutate(fin_situ_change = fin_situ_future - fin_situ_now)
-# visualise
-ggplot(data = df) + 
-  geom_bar(mapping = aes(x = fin_situ_now))
-ggplot(data = df) + 
-  geom_point(mapping = aes(x = fin_situ_now, y = fin_situ_change))
-# hmm doesn't look right
-ggplot(data = df) + 
-  geom_jitter(mapping = aes(x = fin_situ_now, y = fin_situ_change))
-# can also 'facet'
-ggplot(data = df) + 
-  geom_bar(mapping = aes(x = fin_situ_now)) + 
-  facet_wrap(~fin_situ_future)
-# think about the 'contraints' you have placed on the variable through its construction
-# Now split into testing and training
-
-# create training data
-set.seed(1234)
-df_train_index <- df %>%
-  select() %>% 
-  distinct() %>% 
-  sample_frac(0.7)
-# opportunity to discuss joins
-# http://stat545.com/bit001_dplyr-cheatsheet.html
-df_train <- left_join(df_train_index, df)
-df_test <- anti_join(df, df_train_index)
-
-# Modelling time
-# run a regression
-reg1 <- lm(working ~ gender, data = df_train)
-summary(reg1)
-#reg2 <- lm(working ~ gender + fin_situ_now + anyhhincome, data = df_train)
-reg2 <- lm(working ~ gender + givemoney_yes + province, data = df_train)
-summary(reg2)
-#reg3 <- lm(working ~ gender + as.factor(fin_situ_now) + anyhhincome, data = df_train)
-reg3 <- lm(working ~ gender + monthly_pay + as.factor(fin_situ_change), data = df_train)
-summary(reg3)
-# discussion of what this means
-# predict
-df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
-  rename(pred3 = "predict.lm(reg3, df_test)")
-# then bind together
-df_pred3 <- bind_cols(df_test, df_pred3)
-# now manually classify
-stat.desc(df_pred3$pred3)
-quantile(df_pred3$pred3, na.rm = TRUE)
-
-ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3))
-ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3, colour = gender))
-# pick say 30%
-df_pred3 <- df_pred3 %>% 
-  mutate(binary_pred3 = case_when(pred3 >= 0.3 ~ TRUE, 
-                                  pred3 < 0.3 ~ FALSE))
-table(df_pred3$binary_pred3, df_pred3$working)
-# Might be easier to group_by
-confusion_matrix <- df_pred3 %>% 
-  filter(!is.na(binary_pred3)) %>% 
-  mutate(total_obs = n()) %>% 
-  group_by(working, binary_pred3) %>% 
-  summarise(nobs = n(), total_obs = mean(total_obs)) %>% 
-  group_by(working) %>% 
-  mutate(total_working = sum(nobs)) %>% 
-  ungroup()
-# ggplot?
-ggplot(confusion_matrix) +
-  geom_bar(mapping = aes(x = working, y = nobs, fill = binary_pred3), stat = 'identity')
-# proportions
-confusion_matrix <- confusion_matrix %>% 
-  mutate(proportion_pworking = nobs/total_working) %>% 
-  mutate(proportion_total = nobs/total_obs)
-# Is this model good or bad?
-# Why?
-#Predict-- highest true positive rates >.068
+# READ IN DATA
+# now read in data for each assessment
+# test for cognitive fluency
+df_cft <- read.csv("data/raw/teaching_training_data_cft.csv")
+# communication ability
+df_com <- read.csv("data/raw/teaching_training_data_com.csv")
+# grit
+df_grit <- read.csv("data/raw/teaching_training_data_grit.csv")
+# numeracy
+df_num <- read.csv("data/raw/teaching_training_data_num.csv")
+# optimism
+df_opt <- read.csv("data/raw/teaching_training_data_opt.csv")
+# each individual should only have one assessment
+# set up the data so this is the case...
+# also need to only keep the unid and score
+df_cft <- df_cft %>% 
+  select(unid, cft_score) %>% 
+  distinct(unid, .keep_all = TRUE)
+# we want to do this for all 5 asssessments
+# keep_all keeps the rest of the varables in the data frame instead of just the unid, in this case, keep the scores as well
+helper_function <- function(file_name) {
+  file_name %>% 
+    select(2:3) %>% 
+    distinct(unid, .keep_all = TRUE)
+}
+df_com <- helper_function(df_com)
+df_grit <- helper_function(df_grit)
+df_num <- helper_function(df_num)
+df_opt <- helper_function(df_opt)
+df_assess <- full_join(df_cft, df_com, by ="unid")
+df_assess <- df_assess %>% 
+  full_join(df_grit, by ="unid") %>% 
+  full_join(df_num, by ="unid") %>% 
+  full_join(df_opt, by ="unid")
+df <- full_join(df, df_assess, by ="unid")
+rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
+###############################################################################################################3
+# Abe
+# Description: Analyses
+# Created: 07-09-2019
+# Last Updated: 07-09-2019
+df <- df[df$survey_num == 1,]

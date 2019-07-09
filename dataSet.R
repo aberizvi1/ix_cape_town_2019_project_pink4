@@ -22,11 +22,9 @@ df_num <- read.csv("data/raw/teaching_training_data_num.csv")
 # optimism
 df_opt <- read.csv("data/raw/teaching_training_data_opt.csv")
 
-
 # each individual should only have one assessment
 # set up the data so this is the case...
 # also need to only keep the unid and score
-
 df_cft <- df_cft %>% 
   select(unid, cft_score) %>% 
   distinct(unid, .keep_all = TRUE)
@@ -54,3 +52,6 @@ df_assess <- df_assess %>%
 df <- full_join(df, df_assess, by ="unid")
 
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
+
+#Analyses
+filter(!is.2(survey_num))
