@@ -1,4 +1,4 @@
-# Aiden
+# Aiden & Abe
 # Description: Cleaning the data
 # Created: 07-09-2019
 # Last Updated: 07-09-2019
@@ -52,16 +52,14 @@ df_assess <- df_assess %>%
 df <- full_join(df, df_assess, by ="unid")
 
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
-###############################################################################################################
-# Abe
-# Description: Analyses
-# Created: 07-09-2019
-# Last Updated: 07-09-2019
+
+#Remove repeating survey_num
 df <- df[df$survey_num == 1,]
+#Removing post-first survey columns
 df <- subset(df, select = -c(survey_date_month,survey_num,working,job_start_date,job_leave_date,company_size,monthly_pay))
 
 ###############################################################################################################
 # Everyone
-# Description: Analyses (cont.)
+# Description: Analyses
 # Created: 07-09-2019
 # Last Updated: 07-09-2019
