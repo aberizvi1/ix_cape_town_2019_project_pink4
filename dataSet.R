@@ -56,7 +56,7 @@ rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
 #Remove repeating survey_num
 df <- df[df$survey_num == 1,]
 #Removing post-first survey columns
-df <- subset(df, select = -c(survey_date_month,survey_num,working,job_start_date,job_leave_date,company_size,monthly_pay))
+df <- subset(df, select = -c(survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 
 ###############################################################################################################
 # Everyone
