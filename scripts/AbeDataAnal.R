@@ -1,5 +1,18 @@
 
 options(scipen=999)
+
+if(!require("caret")){
+  install.packages("caret")
+}
+if(!require("skimr")){
+  install.packages("skimr")
+}
+if(!require("RANN")){
+  install.packages("RANN")
+}
+library(caret)
+library(skimr)
+library(RANN)
 library(tidyverse)
 df <- read.csv("data/raw/teaching_training_data.csv")
 df_cft <- read.csv("data/raw/teaching_training_data_cft.csv")
@@ -27,6 +40,5 @@ df_assess <- df_assess %>%
 df <- full_join(df, df_assess, by ="unid")
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
 df <- df[df$survey_num == 1,]
-##############################################################################################
-df <- subset(df, select = -c(survey_date_month,survey_num,working,job_start_date,job_leave_date,company_size,monthly_pay))
-             
+df <- subset(df, select = -c(survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
+#######################################################################################################################
