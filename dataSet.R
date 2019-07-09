@@ -52,6 +52,15 @@ df_assess <- df_assess %>%
 df <- full_join(df, df_assess, by ="unid")
 
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
+###############################################################################################################3
+# Abe
+# Description: Analyses
+# Created: 07-09-2019
+# Last Updated: 07-09-2019
+df <- df[df$survey_num == 1,]
 
-#Analyses
-filter(!is.2(survey_num))
+###############################################################################################################3
+# Everyone
+# Description: Analyses (cont.)
+# Created: 07-09-2019
+# Last Updated: 07-09-2019
