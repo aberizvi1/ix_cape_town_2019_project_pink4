@@ -37,3 +37,8 @@ df <- df[df$survey_num == 1,]
 plots.dir.path <- list.files(tempdir(), pattern="rs-graphics", full.names = TRUE); 
 plots.png.paths <- list.files(plots.dir.path, pattern=".png", full.names = TRUE)
 file.copy(from=plots.png.paths, to="plots")
+
+preProcess_missingdata_model <- preProcess(heart_mv, method='knnImpute') 
+preProcess_missingdata_model 
+heart_2 <- predict(preProcess_missingdata_model, newdata = heart_mv)
+
