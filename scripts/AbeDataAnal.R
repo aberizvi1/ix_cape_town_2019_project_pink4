@@ -42,3 +42,60 @@ rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
 df <- df[df$survey_num == 1,]
 df <- subset(df, select = -c(survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 #######################################################################################################################
+#Practice decision tree
+
+#Practice linear regression
+
+#######################################################################################################################
+set.seed(1234)
+
+df_train_index <- df %>%
+  select(unid) %>% 
+  distinct() %>% 
+  sample_frac(0.7)
+# Modelling time
+# run a regression
+reg1 <- lm(working ~ gender, data = df_train)
+summary(reg1)
+reg2 <- lm(working ~ gender + fin_situ_now + anyhhincome, data = df_train)
+summary(reg2)
+# how does below differ?
+reg3 <- lm(working ~ gender + as.factor(fin_situ_now) + anyhhincome, data = df_train)
+summary(reg3)
+# discussion of what this means
+# predict
+df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
+  rename(pred3 = "predict.lm(reg3, df_test)")
+# then bind together
+df_pred3 <- bind_cols(df_test, df_pred3)
+# now manually classify
+stat.desc(df_pred3$pred3)
+quantile(df_pred3$pred3, na.rm = TRUE)
+ggplot(df_pred3) + 
+  geom_density(mapping = aes(x = pred3))
+ggplot(df_pred3) + 
+  geom_density(mapping = aes(x = pred3, colour = gender))
+# pick say 30%
+df_pred3 <- df_pred3 %>% 
+  mutate(binary_pred3 = case_when(pred3 >= 0.3 ~ TRUE, 
+                                  pred3 < 0.3 ~ FALSE))
+table(df_pred3$binary_pred3, df_pred3$working)
+# Might be easier to group_by
+confusion_matrix <- df_pred3 %>% 
+  filter(!is.na(binary_pred3)) %>% 
+  mutate(total_obs = n()) %>% 
+  group_by(working, binary_pred3) %>% 
+  summarise(nobs = n(), total_obs = mean(total_obs)) %>% 
+  group_by(working) %>% 
+  mutate(total_working = sum(nobs)) %>% 
+  ungroup()
+# ggplot?
+ggplot(confusion_matrix) +
+  geom_bar(mapping = aes(x = working, y = nobs, fill = binary_pred3), stat = 'identity')
+# proportions
+confusion_matrix <- confusion_matrix %>% 
+  mutate(proportion_pworking = nobs/total_working) %>% 
+  mutate(proportion_total = nobs/total_obs)
+# Is this model good or bad?
+#Why?
+

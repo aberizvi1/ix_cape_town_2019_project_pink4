@@ -59,12 +59,14 @@ df <- df[df$survey_num == 1,]
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 
 #Conor's imputation code
-preProcess_missingdata_model <- preProcess(heart_mv, method='knnImpute') 
-preProcess_missingdata_model 
-heart_2 <- predict(preProcess_missingdata_model, newdata = heart_mv)
+#preProcess_missingdata_model <- preProcess(heart_mv, method='knnImpute') 
+#preProcess_missingdata_model 
+#heart_2 <- predict(preProcess_missingdata_model, newdata = heart_mv)
 
 #Practice decision tree
+
 #Practice linear regression
+
 ###############################################################################################################
 # Everyone
 # Description: Analyses
