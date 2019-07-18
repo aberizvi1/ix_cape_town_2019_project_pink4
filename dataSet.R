@@ -55,7 +55,7 @@ df <- full_join(df, df_assess, by ="unid")
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
 
 #Remove repeating survey_num
-df <- df[df$survey_num == 1,]
+df <- df %>% distinct(unid, .keep_all = TRUE)
 df <- df %>% 
   mutate(age_at_survey = (interval(dob, survey_date_month)/years(1))-0.333) %>% 
   mutate(age = floor(age_at_survey) )
