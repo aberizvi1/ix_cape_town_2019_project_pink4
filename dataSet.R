@@ -69,6 +69,6 @@ df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_l
 
 ###############################################################################################################
 # Everyone
-# Description: Analyses
-# Created: 07-09-2019
-# Last Updated: 07-09-2019
+# Description: Count NAs in each column
+# Created: 07-18-2019
+# Last Updated: 07-18-2019
