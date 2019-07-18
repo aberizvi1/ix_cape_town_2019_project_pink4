@@ -62,10 +62,12 @@ df <- df %>%
 #Removing post-first survey columns
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 
-#Conor's imputation code
-
 (colSums(is.na(df))*100)/dim(df)[1]
-df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
+df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey, dob))
+df$age_sqrd <- (df$age)^2
+
+
+#Conor's imputation code
 #preProcess_missingdata_model <- preProcess(heart_mv, method='knnImpute') 
 #preProcess_missingdata_model 
 #heart_2 <- predict(preProcess_missingdata_model, newdata = heart_mv)
