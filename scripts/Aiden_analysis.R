@@ -1,11 +1,10 @@
-# Aiden & Abe
+# Aiden
 # Description: Cleaning the data
-# Created: 07-09-2019
-# Last Updated: 07-09-2019
+# Created: 07-18-2019
+# Last Updated: 07-18-2019
 
 options(scipen=999)
 library(tidyverse)
-library(lubridate)
 
 df <- read.csv("data/raw/teaching_training_data.csv")
 
@@ -56,16 +55,10 @@ rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
 
 #Remove repeating survey_num
 df <- df[df$survey_num == 1,]
-df <- df %>% 
-  mutate(age_at_survey = (interval(dob, survey_date_month)/years(1))-0.333) %>% 
-  mutate(age = floor(age_at_survey) )
 #Removing post-first survey columns
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 
 #Conor's imputation code
-
-(colSums(is.na(df))*100)/dim(df)[1]
-df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
 #preProcess_missingdata_model <- preProcess(heart_mv, method='knnImpute') 
 #preProcess_missingdata_model 
 #heart_2 <- predict(preProcess_missingdata_model, newdata = heart_mv)
