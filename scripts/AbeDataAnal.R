@@ -1,19 +1,7 @@
-
 options(scipen=999)
-
-if(!require("caret")){
-  install.packages("caret")
-}
-if(!require("skimr")){
-  install.packages("skimr")
-}
-if(!require("RANN")){
-  install.packages("RANN")
-}
-library(caret)
-library(skimr)
-library(RANN)
+library(pastecs)
 library(tidyverse)
+library(lubridate)
 df <- read.csv("data/raw/teaching_training_data.csv")
 df_cft <- read.csv("data/raw/teaching_training_data_cft.csv")
 df_com <- read.csv("data/raw/teaching_training_data_com.csv")
@@ -39,19 +27,13 @@ df_assess <- df_assess %>%
   full_join(df_opt, by ="unid")
 df <- full_join(df, df_assess, by ="unid")
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
-df <- df[df$survey_num == 1,]
-df <- subset(df, select = -c(survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
+df <- df %>% distinct(unid, .keep_all = TRUE)
 df <- df %>% 
   mutate(age_at_survey = (interval(dob, survey_date_month)/years(1))-0.333) %>% 
   mutate(age = floor(age_at_survey) )
-#Removing post-first survey columns
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
-
-#Conor's imputation code
-
 (colSums(is.na(df))*100)/dim(df)[1]
 df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
-
 #######################################################################################################################
 #Practice decision tree
 
@@ -64,11 +46,11 @@ df_train_index <- df %>%
   distinct() %>% 
   sample_frac(0.7)
 # run a regression model
-reg1 <- lm(working ~ gender, data = df_train)
+reg1 <- lm(working ~ numchildren, data = df_train)
 summary(reg1)
-reg2 <- lm(working ~ gender + fin_situ_now + anyhhincome, data = df_train)
+reg2 <- lm(working ~ numchildren + fin_situ_now + anyhhincome, data = df_train)
 summary(reg2)
-reg3 <- lm(working ~ gender + as.factor(fin_situ_now) + anyhhincome, data = df_train)
+reg3 <- lm(working ~ numchildren + as.factor(fin_situ_now) + anyhhincome, data = df_train)
 summary(reg3)
 # predict
 df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
@@ -81,7 +63,7 @@ quantile(df_pred3$pred3, na.rm = TRUE)
 ggplot(df_pred3) + 
   geom_density(mapping = aes(x = pred3))
 ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3, colour = gender))
+  geom_density(mapping = aes(x = pred3, colour = numchildren))
 # pick 30%
 df_pred3 <- df_pred3 %>% 
   mutate(binary_pred3 = case_when(pred3 >= 0.3 ~ TRUE, 
@@ -112,3 +94,4 @@ confusion_matrix <- confusion_matrix %>%
   #       FALSE TRUE
   #FALSE  8825  3011
   #TRUE   2152  1025
+
