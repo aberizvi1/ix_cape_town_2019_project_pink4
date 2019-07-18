@@ -67,5 +67,11 @@ df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearninco
 df$age_sqrd <- (df$age)^2
 
 #Running regression
+reg1 <- lm(working ~ gender, data = df)
+summary(reg1)
 
+reg2 <- lm(working ~ gender + numchildren, data = df)
+summary(reg2)
 
+reg3 <- lm(working ~ age_sqrd, data = df)
+summary(reg3)
