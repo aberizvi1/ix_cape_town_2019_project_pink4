@@ -48,21 +48,17 @@ df <- subset(df, select = -c(survey_date_month,survey_num,job_start_date,job_lea
 
 #######################################################################################################################
 set.seed(1234)
-
 df_train_index <- df %>%
   select(unid) %>% 
   distinct() %>% 
   sample_frac(0.7)
-# Modelling time
-# run a regression
+# run a regression model
 reg1 <- lm(working ~ gender, data = df_train)
 summary(reg1)
 reg2 <- lm(working ~ gender + fin_situ_now + anyhhincome, data = df_train)
 summary(reg2)
-# how does below differ?
 reg3 <- lm(working ~ gender + as.factor(fin_situ_now) + anyhhincome, data = df_train)
 summary(reg3)
-# discussion of what this means
 # predict
 df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
   rename(pred3 = "predict.lm(reg3, df_test)")
@@ -75,7 +71,7 @@ ggplot(df_pred3) +
   geom_density(mapping = aes(x = pred3))
 ggplot(df_pred3) + 
   geom_density(mapping = aes(x = pred3, colour = gender))
-# pick say 30%
+# pick 30%
 df_pred3 <- df_pred3 %>% 
   mutate(binary_pred3 = case_when(pred3 >= 0.3 ~ TRUE, 
                                   pred3 < 0.3 ~ FALSE))
@@ -89,13 +85,19 @@ confusion_matrix <- df_pred3 %>%
   group_by(working) %>% 
   mutate(total_working = sum(nobs)) %>% 
   ungroup()
-# ggplot?
+# ggplot
 ggplot(confusion_matrix) +
   geom_bar(mapping = aes(x = working, y = nobs, fill = binary_pred3), stat = 'identity')
 # proportions
 confusion_matrix <- confusion_matrix %>% 
   mutate(proportion_pworking = nobs/total_working) %>% 
   mutate(proportion_total = nobs/total_obs)
-# Is this model good or bad?
+#Is this model good or bad?
 #Why?
-
+  
+  #Decent
+  #Low p-values
+  #Confusion matrix:
+  #       FALSE TRUE
+  #FALSE  8825  3011
+  #TRUE   2152  1025
