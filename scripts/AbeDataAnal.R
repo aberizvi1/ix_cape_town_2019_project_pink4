@@ -52,11 +52,11 @@ df_train_index <- df %>%
   distinct() %>% 
   sample_frac(0.7)
 # RUN MODEL
-reg1 <- lm(working ~ numchildren, data = df_train)
+reg1 <- lm(working ~ fin_situ_now + numchildren, data = df_train)
 summary(reg1)
-reg2 <- lm(working ~ numchildren + fin_situ_now + anyhhincome, data = df_train)
+reg2 <- lm(working ~ fin_situ_now + age, data = df_train)
 summary(reg2)
-reg3 <- lm(working ~ numchildren + as.factor(fin_situ_now) + anyhhincome, data = df_train)
+reg3 <- lm(working ~ fin_situ_now + gender, data = df_train)
 summary(reg3)
 # PREDICT
 df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
