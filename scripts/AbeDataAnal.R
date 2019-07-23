@@ -34,42 +34,46 @@ df <- df %>%
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 (colSums(is.na(df))*100)/dim(df)[1]
 df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
-#######################################################################################################################
-#Practice decision tree
 
-#Practice linear regression
+df.sub = droplevels(subset(wolf, Population!=3))
+df.sub$working = 'Heavy'
+df.sub$working[wolf.sub$Population==1] = 'Light'
+ Make the variable Hunting a factor
+wolf.sub$Hunting = as.factor(wolf.sub$Hunting)
+#######################################################################################################################
+#Classification model
 
 #######################################################################################################################
+#1aPredict who is likely to be in work (in survey 1) so that they can intervene at ‘baseline’
+
 set.seed(1234)
 df_train_index <- df %>%
   select(unid) %>% 
   distinct() %>% 
   sample_frac(0.7)
-# run a regression model
+# RUN MODEL
 reg1 <- lm(working ~ numchildren, data = df_train)
 summary(reg1)
 reg2 <- lm(working ~ numchildren + fin_situ_now + anyhhincome, data = df_train)
 summary(reg2)
 reg3 <- lm(working ~ numchildren + as.factor(fin_situ_now) + anyhhincome, data = df_train)
 summary(reg3)
-# predict
+# PREDICT
 df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
   rename(pred3 = "predict.lm(reg3, df_test)")
-# then bind together
 df_pred3 <- bind_cols(df_test, df_pred3)
-# now manually classify
+# CLASSIFY
 stat.desc(df_pred3$pred3)
 quantile(df_pred3$pred3, na.rm = TRUE)
 ggplot(df_pred3) + 
   geom_density(mapping = aes(x = pred3))
 ggplot(df_pred3) + 
   geom_density(mapping = aes(x = pred3, colour = numchildren))
-# pick 30%
+# PICK 30%
 df_pred3 <- df_pred3 %>% 
   mutate(binary_pred3 = case_when(pred3 >= 0.3 ~ TRUE, 
                                   pred3 < 0.3 ~ FALSE))
 table(df_pred3$binary_pred3, df_pred3$working)
-# Might be easier to group_by
 confusion_matrix <- df_pred3 %>% 
   filter(!is.na(binary_pred3)) %>% 
   mutate(total_obs = n()) %>% 
@@ -78,16 +82,14 @@ confusion_matrix <- df_pred3 %>%
   group_by(working) %>% 
   mutate(total_working = sum(nobs)) %>% 
   ungroup()
-# ggplot
 ggplot(confusion_matrix) +
   geom_bar(mapping = aes(x = working, y = nobs, fill = binary_pred3), stat = 'identity')
-# proportions
 confusion_matrix <- confusion_matrix %>% 
   mutate(proportion_pworking = nobs/total_working) %>% 
   mutate(proportion_total = nobs/total_obs)
+
 #Is this model good or bad?
 #Why?
-  
   #Decent
   #Low p-values
   #Confusion matrix:
@@ -95,3 +97,7 @@ confusion_matrix <- confusion_matrix %>%
   #FALSE  8825  3011
   #TRUE   2152  1025
 
+#1bPredict who is likely to work for more than 6 months
+
+
+#2Produce insights which might help the organisation think about interventions
