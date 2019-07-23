@@ -82,3 +82,29 @@ summary(reg3)
 reg4 <- lm(working ~ haschildren + gender, data = df)
 summary(reg4)
 
+
+# Like any good data scientist, we're going to split our data into training
+# and testing sets. Why?
+set.seed(100)
+
+# filter out the rows with NAs in gender column
+df_filtered <- df %>% filter(!is.na(gender))
+
+# Step 1: Get row numbers for the training data
+trainRowNumbers <- createDataPartition(df_filtered$working, p=0.8, list=FALSE)
+
+# Step 2: Create the training  dataset
+trainData <- df_filtered[trainRowNumbers,]
+
+# Step 3: Create the test dataset
+testData <- df_filtered[-trainRowNumbers,]
+
+# Let's train a logistic regression model (glm)
+model_glm <- train(as.factor(working) ~ as.factor(gender), data=trainData, method='glm')
+
+# Now let's predict for our test data
+predicted <- predict(model_glm, testData[,-length(testData)])
+
+
+
+
