@@ -1,19 +1,13 @@
-
 options(scipen=999)
-
-if(!require("caret")){
-  install.packages("caret")
-}
-if(!require("skimr")){
-  install.packages("skimr")
-}
-if(!require("RANN")){
-  install.packages("RANN")
-}
+install.packages("skimr")
+install.packages("caret")
+install.packages("RANN")
 library(caret)
 library(skimr)
 library(RANN)
+library(pastecs)
 library(tidyverse)
+library(lubridate)
 df <- read.csv("data/raw/teaching_training_data.csv")
 df_cft <- read.csv("data/raw/teaching_training_data_cft.csv")
 df_com <- read.csv("data/raw/teaching_training_data_com.csv")
@@ -39,44 +33,61 @@ df_assess <- df_assess %>%
   full_join(df_opt, by ="unid")
 df <- full_join(df, df_assess, by ="unid")
 rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
-df <- df[df$survey_num == 1,]
-df <- subset(df, select = -c(survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
-#######################################################################################################################
-#Practice decision tree
+df <- df %>% distinct(unid, .keep_all = TRUE)
+df <- df %>% 
+  mutate(age_at_survey = (interval(dob, survey_date_month)/years(1))-0.333) %>% 
+  mutate(age = floor(age_at_survey) )
+df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
+(colSums(is.na(df))*100)/dim(df)[1]
+df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
 
-#Practice linear regression
-
 #######################################################################################################################
-set.seed(1234)
-df_train_index <- df %>%
-  select(unid) %>% 
-  distinct() %>% 
-  sample_frac(0.7)
-# run a regression model
-reg1 <- lm(working ~ gender, data = df_train)
-summary(reg1)
-reg2 <- lm(working ~ gender + fin_situ_now + anyhhincome, data = df_train)
-summary(reg2)
-reg3 <- lm(working ~ gender + as.factor(fin_situ_now) + anyhhincome, data = df_train)
-summary(reg3)
-# predict
-df_pred3 <- as.data.frame(predict.lm(reg3, df_test)) %>% 
-  rename(pred3 = "predict.lm(reg3, df_test)")
-# then bind together
-df_pred3 <- bind_cols(df_test, df_pred3)
-# now manually classify
-stat.desc(df_pred3$pred3)
-quantile(df_pred3$pred3, na.rm = TRUE)
-ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3))
-ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3, colour = gender))
-# pick 30%
+#Classification model
+#######################################################################################################################
+#1aPredict who is likely to be in work (in survey 1) so that they can intervene at ‘baseline’
+
+set.seed(100)
+#TRAIN
+trainRowNumbers <- createDataPartition(heart$num, p=0.8, list=FALSE)
+#TRAIN
+trainData <- heart[trainRowNumbers,]
+#TEST
+testData <- heart[-trainRowNumbers,]
+#TRAIN
+model_rpart <- train(num ~ ., data=trainData, method='rpart')
+#PREDICT
+predicted <- predict(model_rpart, testData[,-length(testData)])
+
+################################################################################
+#### Validation Techniques ####
+#### Cross Validation
+# CV is a validation technique where we retrain our model on different splits of our 
+# data to get an 'average performance' 
+trControl <- trainControl(method = "cv", number = 10, verboseIter = TRUE)
+model_rpart <- train(num ~ ., data=trainData, method='rpart', trControl = trControl)
+model_rpart$results
+model_rpart_kappa <- train(num ~ ., data=trainData, method='rpart', trControl = trControl, metric = 'Kappa')
+model_rpart <- train(num ~ ., data=trainData, method='rpart', trControl = trControl, 
+                     tuneGrid = expand.grid(cp = seq(0.000, 0.02, 0.0025)))
+model_rpart$results
+# NEW MODEL?
+new_model <- 
+#COMPARE MODELS
+model_comp <- resamples(list(my_new_model = new_model, Rpart = model_rpart))
+summary(model_comp)
+# Helper code to artificially create data with missing values from the iris data set (run this first!)
+iris_missVals <- iris
+iris_missVals$Petal.Length[sample(1:nrow(iris_missVals), 50)] <- NA
+
+#1bPredict who is likely to work for more than 6 months
+
+
+#2Produce insights which might help the organisation think about interventions
+
 df_pred3 <- df_pred3 %>% 
   mutate(binary_pred3 = case_when(pred3 >= 0.3 ~ TRUE, 
                                   pred3 < 0.3 ~ FALSE))
 table(df_pred3$binary_pred3, df_pred3$working)
-# Might be easier to group_by
 confusion_matrix <- df_pred3 %>% 
   filter(!is.na(binary_pred3)) %>% 
   mutate(total_obs = n()) %>% 
@@ -85,19 +96,5 @@ confusion_matrix <- df_pred3 %>%
   group_by(working) %>% 
   mutate(total_working = sum(nobs)) %>% 
   ungroup()
-# ggplot
 ggplot(confusion_matrix) +
   geom_bar(mapping = aes(x = working, y = nobs, fill = binary_pred3), stat = 'identity')
-# proportions
-confusion_matrix <- confusion_matrix %>% 
-  mutate(proportion_pworking = nobs/total_working) %>% 
-  mutate(proportion_total = nobs/total_obs)
-#Is this model good or bad?
-#Why?
-  
-  #Decent
-  #Low p-values
-  #Confusion matrix:
-  #       FALSE TRUE
-  #FALSE  8825  3011
-  #TRUE   2152  1025
