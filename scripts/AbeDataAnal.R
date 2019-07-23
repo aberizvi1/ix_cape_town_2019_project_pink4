@@ -58,57 +58,21 @@ model_rpart <- train(num ~ ., data=trainData, method='rpart')
 #PREDICT
 predicted <- predict(model_rpart, testData[,-length(testData)])
 
-# CLASSIFY
-stat.desc(df_pred3$pred3)
-quantile(df_pred3$pred3, na.rm = TRUE)
-ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3))
-ggplot(df_pred3) + 
-  geom_density(mapping = aes(x = pred3, colour = numchildren))
-# PICK 30%
-
-confusion_matrix <- confusion_matrix %>% 
-  mutate(proportion_pworking = nobs/total_working) %>% 
-  mutate(proportion_total = nobs/total_obs)
-
-# Choose a subset of columns.
-heart <- heart[, c(1:5, 14)]
-
-# Rename columns.
-#
-# age      - age in years
-# sex      - gender (1 = male; 0 = female) 
-# cp       - chest pain type (1 = typical angina; 2 = atypical angina; 3 = non-anginal pain; 4 = asymptomatic)
-# trestbps - resting blood pressure [mm Hg]
-# chol     - serum cholestorol
-# num      - diagnosis of heart disease (0 = no disease)
-#
 ################################################################################
 #### Validation Techniques ####
 #### Cross Validation
 # CV is a validation technique where we retrain our model on different splits of our 
 # data to get an 'average performance' 
-# For more information on cross validation: https://towardsdatascience.com/cross-validation-70289113a072
-# To control validation techniques during training we can use the train control function
 trControl <- trainControl(method = "cv", number = 10, verboseIter = TRUE)
-# this function stipulats:
-#     - the method of training: Cross validation (cv) 
-#     - Number of folds: 10
-#     - I our process is going to be chatty: TRUE
 model_rpart <- train(num ~ ., data=trainData, method='rpart', trControl = trControl)
-# What did verboseIter actually do?
-# Let's check on our hyperparameters, how are we evaluating success?
 model_rpart$results
-# What about if we want a different metric
 model_rpart_kappa <- train(num ~ ., data=trainData, method='rpart', trControl = trControl, metric = 'Kappa')
-# What if we don't like the defaults for the hyper parameters we're testing?
 model_rpart <- train(num ~ ., data=trainData, method='rpart', trControl = trControl, 
                      tuneGrid = expand.grid(cp = seq(0.000, 0.02, 0.0025)))
-# Let's check on our hyperparameters again
 model_rpart$results
-# Train a new classification model of your choice
+# NEW MODEL?
 new_model <- 
-#Compare the two models using resamples
+#COMPARE MODELS
 model_comp <- resamples(list(my_new_model = new_model, Rpart = model_rpart))
 summary(model_comp)
 # Helper code to artificially create data with missing values from the iris data set (run this first!)
