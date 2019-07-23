@@ -1,7 +1,4 @@
 options(scipen=999)
-install.packages("skimr")
-install.packages("caret")
-install.packages("RANN")
 library(caret)
 library(skimr)
 library(RANN)
@@ -40,21 +37,54 @@ df <- df %>%
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 (colSums(is.na(df))*100)/dim(df)[1]
 df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
-
 #######################################################################################################################
 #Classification model
 #######################################################################################################################
 #1aPredict who is likely to be in work (in survey 1) so that they can intervene at ‘baseline’
+df$working <- as.factor(c("TRUE","FALSE"))
+df$working
+unclass(df$working)
+##########################################################################################3
+set.seed(101)
+tot_nochc=runif(10,1,15)
+cor_partner=factor(c(1,1,0,1,0,0,0,0,1,0))
+age=runif(10,18,75)
+agecu=age^3
+day=factor(c(1,2,2,3,3,NA,NA,4,4,4))
+## use data.frame() -- *DON'T* cbind() first
+dt=data.frame(tot_nochc,cor_partner,agecu,day)
+## DON'T attach(dt) ...
+Now try:
+  
+library(nlme)
+corpart.lme.1=lme(tot_nochc~cor_partner+agecu+cor_partner *agecu, 
+                  random = ~cor_partner+agecu+cor_partner *agecu |day, 
+                  data=dt,
+                  )
+#########################################################################################################Running regression
+reg1 <- lm(working ~ gender, data = df)
+summary(reg1)
+
+reg2 <- lm(working ~ gender + numchildren, data = df)
+summary(reg2)
+
+reg3 <- lm(working ~ age_sqrd, data = df)
+summary(reg3)
+
+reg4 <- lm(working ~ haschildren + gender, data = df)
+summary(reg4)
+###########################################################################################################3
+
 
 set.seed(100)
 #TRAIN
-trainRowNumbers <- createDataPartition(heart$num, p=0.8, list=FALSE)
+trainRowNumbers <- createDataPartition(df$working, p=0.8, list=FALSE)
 #TRAIN
-trainData <- heart[trainRowNumbers,]
+trainData <- df[trainRowNumbers,]
 #TEST
-testData <- heart[-trainRowNumbers,]
+testData <- df[-trainRowNumbers,]
 #TRAIN
-model_rpart <- train(num ~ ., data=trainData, method='rpart')
+model_rpart<- train(working ~ gender, data=trainData, method='rpart')
 #PREDICT
 predicted <- predict(model_rpart, testData[,-length(testData)])
 
