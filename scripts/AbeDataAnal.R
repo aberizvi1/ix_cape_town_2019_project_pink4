@@ -39,6 +39,8 @@ df <- df %>% distinct(unid, .keep_all = TRUE)
 df <- df %>% 
   mutate(age_at_survey = (interval(dob, survey_date_month)/years(1))-0.333) %>% 
   mutate(age = floor(age_at_survey) )
+imp<-mice(data = df[,c("unid","gender","working","volunteer","leadershiprole","peoplelive","numchildren","anygrant","anyhhincome","financial_situation_now","financial_situation_5years","givemoney_yes","cft_score","grit_score","opt_score","age","haschildren")], seed = 1000)
+
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 (colSums(is.na(df))*100)/dim(df)[1]
 df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
@@ -71,7 +73,6 @@ model_glm <- train(as.factor(working) ~ as.factor(gender), data=trainData, metho
 predicted <- predict(model_glm, testData[,-length(testData)])
 
 
-imp<-mice(data = df[,c("unid","gender","working","volunteer","leadershiprole","peoplelive","numchildren","anygrant","anyhhincome","financial_situation_now","financial_situation_5years","givemoney_yes","cft_score","grit_score","opt_score","age","haschildren")], seed = 1000)
 
 #pred <- pred %>% 
 #  mutate(predicted = case_when(pred >= 0.3 ~ TRUE, 
