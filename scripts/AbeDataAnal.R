@@ -40,24 +40,29 @@ df <- df %>%
 df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
 (colSums(is.na(df))*100)/dim(df)[1]
 df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey))
+rm(df_assess, df_cft, df_com, df_grit, df_num, df_opt)
+df <- df %>% distinct(unid, .keep_all = TRUE)
+df <- df %>% 
+  mutate(age_at_survey = (interval(dob, survey_date_month)/years(1))-0.333) %>% 
+  mutate(age = floor(age_at_survey) )
+df <- subset(df, select = -c(X,survey_date_month,survey_num,job_start_date,job_leave_date,company_size,monthly_pay))
+(colSums(is.na(df))*100)/dim(df)[1]
+df <- subset(df, select = -c(peoplelive_15plus, num_score, province, numearnincome, com_score, age_at_survey, dob))
+df$age_sqrd <- (df$age)^2
 
-#######################################################################################################################
-#Classification model
-#######################################################################################################################
-#1aPredict who is likely to be in work (in survey 1) so that they can intervene at ‘baseline’
+df <- df %>% 
+  mutate(haschildren = as.numeric(as.character(df$numchildren)) > 0)
+################################################################################
+#MODEL
 
-set.seed(100)
-#TRAIN
-trainRowNumbers <- createDataPartition(heart$num, p=0.8, list=FALSE)
-#TRAIN
-trainData <- heart[trainRowNumbers,]
-#TEST
-testData <- heart[-trainRowNumbers,]
-#TRAIN
-model_rpart <- train(num ~ ., data=trainData, method='rpart')
-#PREDICT
-predicted <- predict(model_rpart, testData[,-length(testData)])
-
+reg1 <- lm(working ~ gender, data = df)
+summary(reg1)
+reg2 <- lm(working ~ gender + numchildren, data = df)
+summary(reg2)
+reg3 <- lm(working ~ age_sqrd, data = df)
+summary(reg3)
+reg4 <- lm(working ~ haschildren + gender, data = df)
+summary(reg4)
 ################################################################################
 #### Validation Techniques ####
 #### Cross Validation
