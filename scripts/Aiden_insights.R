@@ -82,20 +82,20 @@ reg_out_acti = lm(working ~ out_acti, data = df_out_acti)
 summary(reg_out_acti)
 #########################################################################################################
 # 3rd: numchildren
-# data shows that the higher the number of children, the less likely
-# the person is likely to work --> take care of kids
+  # data shows that the higher the number of children, the less likely
+  # the person is likely to work --> take care of kids
 reg_numchildren = lm(working ~ numchildren, data = df)
 summary(reg_numchildren)
-# feature engineering: add column of 'haschildren'
-# no significant statistical result, basically only confirming that
-# having kids decreases the prob of working
+  # feature engineering: add column of 'haschildren'
+  # no significant statistical result, basically only confirming that
+  # having kids decreases the prob of working
 reg_haschildren = lm(working ~ haschildren, data = df)
 summary(reg_haschildren)
-# insights on province vs working
-# North West and Western Cape stand out as the only two regions
-# that has more than 25% probability a person from there is working
-# https://www.iol.co.za/weekend-argus/western-cape-is-leading-creator-of-employment-21632718
-# helping people to get employed --> higher chance at Western Cape / North West
+  # insights on province vs working
+  # North West and Western Cape stand out as the only two regions
+  # that has more than 25% probability a person from there is working
+  # https://www.iol.co.za/weekend-argus/western-cape-is-leading-creator-of-employment-21632718
+  # helping people to get employed --> higher chance at Western Cape / North West
 ggplot(data = df, aes(x = province)) +
   geom_bar(aes(fill = working), position = 'fill') +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
