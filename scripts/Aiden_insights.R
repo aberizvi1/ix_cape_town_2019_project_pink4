@@ -51,6 +51,12 @@ df <- df %>% mutate(out_acti = case_when((df$volunteer == 'Yes' | df$leadershipr
 #########################################################################################################
 # 1st: anygrant & anyhhincome
 df_ext_supp <- df %>% filter(!is.na(ext_supp))
+
+ggplot(data = df_ext_supp, aes(x = ext_supp)) +
+  geom_bar(aes(fill = working), position = 'fill') +
+  ylab('probability of working/not working')
+
+
 ggplot(data = df_ext_supp) +
   geom_bar(mapping = aes(x = anygrant, fill = working))
 reg_grant = lm(working ~ anygrant, data = df)
@@ -96,7 +102,7 @@ summary(reg_haschildren)
   # that has more than 25% probability a person from there is working
   # https://www.iol.co.za/weekend-argus/western-cape-is-leading-creator-of-employment-21632718
   # helping people to get employed --> higher chance at Western Cape / North West
-ggplot(data = df, aes(x = province)) +
+ggplot(data = df %>% filter(!is.na(province)), aes(x = province)) +
   geom_bar(aes(fill = working), position = 'fill') +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
   ylab('probability of working/not working')
