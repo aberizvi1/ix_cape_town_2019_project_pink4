@@ -140,3 +140,33 @@ ggplot(data = df, aes(x = cft_score)) +
 ggplot(data = df) +
   geom_bar(mapping = aes(x = hasincome, fill = working))
 #########################################################################################################333
+
+
+
+# Are there differences in outcomes between males and females?
+# - Does this justify different types of interventions?
+
+# What types of labour market pathways are there in the data?
+# - Are there certain types of characteristics associated with these 
+# different pathways?
+
+# Are there particular groups who are particularly disadvantaged?
+
+# What matters most for a 'successful' outcome?
+# - Are these changable and what could be done to change them?
+
+# Does age matter?
+# - Should interventions differ depending on how old someone is?
+
+# Is there seasonality in hiring?
+# - Do certain types of profiles benefit from this?
+
+# Is there a particular length or number of jobs a person
+# requires to be 'secure'?
+
+# How does the sample change?
+# With time? Across survey numbers? Between men and women? Between provinces?
+
+# Is there a provincial or location aspect?
+# Could certain types of people benefit from moving to different areas
+
