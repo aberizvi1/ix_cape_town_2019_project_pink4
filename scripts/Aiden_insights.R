@@ -4,6 +4,8 @@
 options(scipen=999)
 library(tidyverse)
 library(dplyr)
+library(pastecs)
+library(lubridate)
 df <- read.csv("data/raw/teaching_training_data.csv")
 df_cft <- read.csv("data/raw/teaching_training_data_cft.csv")
 df_com <- read.csv("data/raw/teaching_training_data_com.csv")
@@ -47,6 +49,12 @@ df <- df %>%
 df <- df %>% mutate(out_acti = case_when((df$volunteer == 'Yes' | df$leadershiprole == 'Yes') ~ 'TRUE',
                                          (df$volunteer == 'No' | df$leadershiprole == 'No' ~ 'FALSE')))
 
+df <- df %>% 
+  mutate(age_at_survey = interval(dob, survey_date_month)/years(1)) %>% 
+  mutate(age = floor(age_at_survey))
+
+colSums(is.na(df))
+
                   # columns that are combined/edited #
 #########################################################################################################
 # 1st: anygrant & anyhhincome
@@ -54,7 +62,7 @@ df_ext_supp <- df %>% filter(!is.na(ext_supp))
 
 ggplot(data = df_ext_supp, aes(x = ext_supp)) +
   geom_bar(aes(fill = working), position = 'fill') +
-  ylab('probability of working/not working')
+  ylab('proportion of working/not working')
 
 
 ggplot(data = df_ext_supp) +
@@ -86,6 +94,14 @@ summary(reg_leadershiprole)
 # leadership experience
 reg_out_acti = lm(working ~ out_acti, data = df_out_acti)
 summary(reg_out_acti)
+
+ggplot(data = df_out_acti) +
+  geom_bar(mapping = aes(x = out_acti, fill = working))
+
+
+ggplot(data = df_out_acti, aes(x = out_acti)) +
+  geom_bar(aes(fill = working), position = 'fill') +
+  ylab('proportion of working/not working')
 #########################################################################################################
 # 3rd: numchildren
   # data shows that the higher the number of children, the less likely
@@ -105,7 +121,7 @@ summary(reg_haschildren)
 ggplot(data = df %>% filter(!is.na(province)), aes(x = province)) +
   geom_bar(aes(fill = working), position = 'fill') +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-  ylab('probability of working/not working')
+  ylab('proportion of working/not working')
 # insights on scores vs working
 ggplot(data = df) +
   geom_bar(mapping = aes(x = c(cft_score, com_score, grit_score, num_score, opt_score), fill = working))
@@ -131,8 +147,37 @@ ggplot(df, aes(x=cft_score,  group=gender)) +
   scale_y_continuous(labels = scales::percent)
 # shows that for both females and males, it is more likely
 # that they are employed when they are older
+ggplot(df, aes(x = age, fill = working)) + geom_density(df$gender)
+
 ggplot(data = df) + 
   geom_point(mapping = aes(x = gender, y = age, color = working))
+
+df <- df %>% filter(!is.na(gender))
+ggplot(data = df) + 
+  geom_bar(mapping = aes(x = age, fill = working)) + 
+  facet_wrap(~gender)
+
+
+
+ggplot(data = df, aes(x = age)) +
+  geom_bar(aes(fill = working)) +
+  ylab('count') + 
+  facet_wrap(~gender)
+
+
+ggplot(data = df, aes(x = age)) +
+  geom_bar(aes(fill = working), position = "fill") + facet_grid(~gender) +
+  theme(axis.text.x = element_text(angle = 50, hjust =1)) +
+  ylab("Percentage") + xlab("Age") +
+  labs(subtitle = "Gender") + theme(plot.subtitle = element_text(hjust = 0.5)) + 
+  scale_y_continuous(labels=scales::percent)
+
+
+
+
+
+
+
 #########################################################################################################
 # 4th: financial situation change  
 ggplot(data = df) + 
